@@ -1,60 +1,88 @@
+// Nodes start from node 1
 #include <bits/stdc++.h>
 
 using namespace std;
-int rootMaxHeight = 20;
 
-void dfs(int node, int par, vector<vector<int>> &adjList, vector<vector<int>> &parents, vector<int> &level) {
-    parents[node][0] = par;
-    level[node] = level[par] + 1;
-    for (auto child:adjList[node]) {
-        if (child == par) continue;
-        dfs(child, node, adjList, parents, level);
+const int N = 2e5;
+vector<vector<int>> adj(N);
+const int LG = 20;
+
+// lvl[i] -> level of node i, lvl[1] = 0;
+// P[i][j] -> (2^j)th parent of node i
+int lvl[N], P[N][LG];
+
+void dfs(int u, int par) {
+    lvl[u] = 1 + lvl[par];
+    P[u][0] = par;
+    for (auto itr:adj[u]) {
+        if (itr == par) {
+            continue;
+        }
+        dfs(itr, u);
     }
 }
 
-int lca(int nodeA, int nodeB, vector<int> &level, vector<vector<int>> &parents) {
-    if (level[nodeA] < level[nodeB]) return lca(nodeB, nodeA, level, parents);
-    int cpyRootMaxHeight;
-    for (cpyRootMaxHeight = 0; (1 << cpyRootMaxHeight) <= level[nodeA]; cpyRootMaxHeight++) {
+int lca(int u, int v) {
+    int lg;
+    if (lvl[u] < lvl[v]) {
+        swap(u, v);
+    }
 
-    }
-    cpyRootMaxHeight--;
-    for (int i = cpyRootMaxHeight; i >= 0; i--) {
-        if (level[nodeA] - (1 << i) >= level[nodeB]) {
-            nodeA = parents[nodeA][i];
+    for (lg = 0; (1 << lg) <= lvl[u]; lg++);
+    lg--;
+
+    for (int i = lg; i >= 0; i--) {
+        if (lvl[u] - (1 << i) >= lvl[v]) {
+            u = P[u][i];
         }
     }
-    if (nodeA == nodeB) return nodeA;
-    for (int i = cpyRootMaxHeight; i >= 0; i--) {
-        if (parents[nodeB][i] != -1 && parents[nodeA][i] != parents[nodeB][i]) {
-            nodeA = parents[nodeA][i];
-            nodeB = parents[nodeB][i];
+
+    if (u == v) {
+        return u;
+    }
+
+    for (int i = lg; i >= 0; i--) {
+        if (P[u][i] != -1 && P[u][i] != P[v][i]) {
+            u = P[u][i], v = P[v][i];
         }
     }
-    return parents[nodeA][0];
+
+    return P[u][0];
 }
 
 int main() {
-    int numNodes;
-    cin >> numNodes;
-    vector<vector<int>> adjList(numNodes + 1);
-    for (int edge = 1; edge <= numNodes - 1; edge++) {
-        int nodeA, nodeB;
-        cin >> nodeA >> nodeB;
-        adjList[nodeA].push_back(nodeB);
-        adjList[nodeB].push_back(nodeA);
+    int n;
+    cin >> n;
+    for (int i = 0; i + 1 < n; i++) {
+        int a, b;
+        cin >> a >> b;
+        adj[a].push_back(b);
+        adj[b].push_back(a);
     }
 
-    vector<int> level(numNodes + 1, -1);
-    vector<vector<int>> parents(numNodes + 1, vector<int>(rootMaxHeight + 1, -1));
-    dfs(1, 0, adjList, parents, level);
+    for (int i = 0; i < LG; i++) {
+        for (int j = 0; j <= n; j++) {
+            P[j][i] = -1;
+        }
+    }
+    lvl[0] = -1;
 
-    int numQueries;
-    cin >> numQueries;
-    while (numQueries--) {
-        int nodeA, nodeB;
-        cin >> nodeA >> nodeB;
-        cout << lca(nodeA, nodeB, level, parents) << '\n';
+    dfs(1, 0);
+
+    for (int i = 1; i < LG; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (P[j][i - 1] != -1) {
+                P[j][i] = P[P[j][i - 1]][i - 1];
+            }
+        }
+    }
+
+    int q;
+    cin >> q;
+    while (q--) {
+        int a, b;
+        cin >> a >> b;
+        cout << lca(a, b) << '\n';
     }
     return 0;
 }
