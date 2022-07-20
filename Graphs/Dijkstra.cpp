@@ -14,7 +14,7 @@ void dijkstra(int src, vector<vector<pair<int, int>>> &adjList, vector<int> &dis
             int edgeWeight = edge.second;
             if (distanceFromSrc[currSrc] + edgeWeight < distanceFromSrc[currDest]) {
                 distanceFromSrc[currDest] = distanceFromSrc[currSrc] + edgeWeight;
-                maxPQ.push(make_pair(distanceFromSrc[currDest], currDest));
+                maxPQ.push(make_pair(-distanceFromSrc[currDest], currDest));
             }
         }
     }
